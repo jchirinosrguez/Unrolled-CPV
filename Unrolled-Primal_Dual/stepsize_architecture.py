@@ -1,5 +1,13 @@
+"""
+stepsize_architecture.
+Classes
+-----------
+stepsize_arch : Joint additional layer in the architecture learning regularization and stepsizes .
+"""
+
 import torch.nn as nn
 import torch
+
 Soft = nn.Softplus()
 R=nn.ReLU()
 class stepsize_arch(torch.nn.Module):

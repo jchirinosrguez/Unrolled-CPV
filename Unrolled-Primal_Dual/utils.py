@@ -1,10 +1,17 @@
+"""
+utils.
+Functions
+-----------
+activation primal : performs soft threshholding of a given vector.
+activation dual : performs activation on dual branch.
+SNR    : computes signal-to-noise ratio metric between a groundtruth and predicted signal.
+TSNR   : computes truncated signal-to-noise ratio metric between a groundtruth and predicted signal.
+"""
 import torch
 import numpy as np
 
 def activation_primal(u, tau, factor=1.):
-    """Soft-thresholding of vector u at level tau > 0."""
     zer=torch.zeros_like(u)
-    
     return torch.sign(u) * torch.maximum(zer, torch.abs(u) - tau)
 
 

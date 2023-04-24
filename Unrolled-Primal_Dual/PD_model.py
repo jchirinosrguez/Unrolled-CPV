@@ -1,3 +1,11 @@
+"""
+PD_model.
+Classes
+-----------
+layer:       One layer in the unrolled primal dual architecture.
+PD_model : Unrolled PD model.
+"""
+
 from utils import activation_primal, activation_dual
 from stepsize_architecture import stepsize_arch
 import torch
@@ -13,11 +21,8 @@ class layer(torch.nn.Module):
         tau,sigma,rho=self.architecture()
         bp=-tau*torch.mm(H.T,(2*d-d_old).T).T
         p=activation_primal(p+bp,tau)
-        
-#         bd=sigma*(torch.mm(H,(p).T).T -y)
         bd=sigma*torch.mm(H,(p).T).T 
         d=activation_dual(d+bd,y,sigma,rho)
-        
         return p,d
         
 class PD_model(torch.nn.Module):

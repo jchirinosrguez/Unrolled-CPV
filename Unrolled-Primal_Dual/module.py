@@ -1,3 +1,13 @@
+"""
+module.
+Class
+-----------
+MyDataset : manages loading data to be fed to the first layer of unrolled architecture.
+"""
+
+
+
+
 import os
 import torch.nn as nn
 import torch
@@ -46,13 +56,8 @@ class MyDataset(torch.utils.data.Dataset):
             if self.need_names =="yes":
                 name=os.path.splitext(self.file_names_Gr[index])[0]
                 return name, X_true, X_degraded
-            
-            
-
-
 
     def __len__(self):
-
         return len(self.file_list_Gr)
     
 

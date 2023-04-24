@@ -1,3 +1,11 @@
+"""
+Network.
+Class
+-----------
+Network : Includes the main training and testing of the Unrolled Primal Dual.
+"""
+
+
 import time
 import matplotlib.pyplot as plt
 import numpy as np
@@ -189,24 +197,6 @@ class Network(nn.Module):
     
     
     def test(self, path_set=None,path_model=None, need_names="no", path_signal=None,save_estimate=False):
-        """"
-        Computes average MSE on a given set S according to mode (MM,3MG, learnt_MM_lambda, learnt_3MG_lambda),
-        returns highest and lowest MSE in S with respective signal names.
-         Plots groundtruth, degraded and reconstructed spectrum of given signal.
-
-
-        Parameters
-        ----------
-        path_set       : Path for given set (train, validation or test) to compute average MSE on it.
-                            (has the structure Groundtruth, Degraded, Initial)
-        path_model     : path to saved model after learning lambda.
-        path_signal:    If signal_name is given, return its MSE and plot x_true, x_degraded and x_pred.
-                        (Always give path to groundtruth signal: Example: "/home/mouna/Desktop/First_setting_test/test/Groundtruth/x_Gr_te_147.npy")
-        need_names :    Print signal names and their corresponding MSE while computing the average over set S.
-       """""
-
-     
-     
         checkpoint = torch.load(path_model,map_location='cuda:0')
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.model.eval()
@@ -218,10 +208,6 @@ class Network(nn.Module):
             name=os.path.split(path_signal)[1]
             x_true=torch.unsqueeze(torch.tensor(np.load(path_signal, allow_pickle=True)),0)
             x_degraded=torch.unsqueeze(torch.tensor(np.load(path_signal.replace('Groundtruth','Degraded').replace('_Gr_','_De_'), allow_pickle=True)),0)
-
-
-            
-            
             x_true = Variable(x_true.type(self.dtype), requires_grad=False)
             x_degraded = Variable((x_degraded).type(self.dtype), requires_grad=False)
             
@@ -242,13 +228,7 @@ class Network(nn.Module):
             print("loss is:",loss, "and SNR is", snr)
             print("Execution time is",t1-t0)
             return x_pred.detach()
-
-          
-                
-
-
         else:
-         
             self.CreateLoader(need_names)
             total_loss = 0
             total_time =0
@@ -256,7 +236,6 @@ class Network(nn.Module):
             total_SNR=0
             total_tSNR =0
             i=0
-            
             MSE_list=[]
             SNR_list=[]
             TSNR_list=[]
@@ -292,10 +271,6 @@ class Network(nn.Module):
                 d0_old=x0_d
                 y=x_degraded
                 x_pred,x_pred1 = self.model(self.H,p0,p0_old,d0,d0_old,y,x_true)
-                np.save(os.path.split(path_model)[0]+"/Rec_Signals/"+name.replace('Gr','Es') , x_pred.detach().cpu().numpy().ravel())
-                
-                
-#                 np.save(os.path.split(path_model)[0]+"/Rec_Signals/x_Es_te"+"_"+str(i) , x_pred.detach().cpu().numpy().ravel())
                 t1=time.time()
                 loss = (Loss_fun(x_true, x_pred).detach())
                 snr=SNR(x_true,x_pred).detach()
@@ -337,110 +312,4 @@ class Network(nn.Module):
     
     
     
-    def plot_signals(self,path_signal,path_model):
-        name=os.path.split(path_signal)[1]
-        name=name.replace('.npy','')
-        x_true=torch.unsqueeze(torch.tensor(np.load(path_signal, allow_pickle=True)),0)
-           
-        x_degraded=torch.unsqueeze(torch.tensor(np.load(path_signal.replace('Groundtruth','Degraded').replace('_Gr_','_De_'), allow_pickle=True)),0)
-        x_pred=self.test(path_model=path_model, path_signal=path_signal,save_estimate=False)
-        x = np.linspace(1, 2000, 2000)
-        y=np.linspace(1,2049,2049)
-        plt.figure()
-        plt.plot(x,x_true.squeeze().cpu().numpy(),color='black', linestyle='solid', linewidth=0.5, markersize=1)
-#         plt.title(r'$\overline{x}$')
-#         plt.xlabel(r'$m/z$')
-        plt.ylim((-10, 60))
-        plt.savefig(self.path_save_model+'Groundtruth-plot/'+name)
-        plt.show()
-        plt.close()
    
-        plt.figure()
-        name=name.replace('Gr','De')
-        plt.plot(y,x_degraded.squeeze().cpu().numpy(),color='black',  linestyle='solid', linewidth=0.5)
-#         plt.title(r'$y$')
-#         plt.xlabel(r'$m/z$')
-        plt.ylim((-10, 60))
-        plt.savefig(self.path_save_model+'Degraded-plot/'+name)
-        plt.show()
-        plt.close()
-     
-        plt.figure()
-        name=name.replace('De','Es')
-      
-        print(x_pred.size())
-        plt.plot(x_pred.squeeze().cpu().numpy(), color='black', linestyle='solid', linewidth=0.5)
-#         plt.title(r'$\hat{x}$')
-#         plt.xlabel(r'$m/z$')
-        plt.ylim((-10, 60))
-        plt.savefig(self.path_save_model+"/Reconstructed/"+name)
-        plt.show()
-        plt.close()
-        
-     
-        plt.figure()
-        name=name.replace('Es','Es_diff')
-        plt.plot(x,x_true.squeeze()-x_pred.squeeze().cpu().numpy(), color='black', linestyle='solid', linewidth=0.5)
-        plt.title(r'$\overline{x}-\hat{x}$')
-        plt.xlabel(r'$m/z$')
-        plt.ylim((-20,20))
-        plt.savefig(self.path_save_model+"/Groundtruth-Reconstructed/"+name)
-        plt.show()
-        plt.close()
-        
-        
-        
-        
-    def plot_stepsizes(self,path_model):
-        checkpoint = torch.load(path_model)
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        i=0
-        list_sigma=[]
-        list_tau=[]
-        list_rho=[]
-        for name, param in self.model.state_dict().items():
-            if name == 'Layers.'+str(i)+'.architecture.tau':
-                list_tau.append(FF.relu(param).cpu().numpy())
-            if name == 'Layers.'+str(i)+'.architecture.sigma':
-                list_sigma.append(FF.relu(param).cpu().numpy())
-            if name == 'Layers.'+str(i)+'.architecture.rho':
-                list_rho.append(FF.relu(param).cpu().numpy())
-                i=i+1
-
-        plt.figure()    
-        plt.plot(list_sigma,color='red' ,marker='o',markersize=2, linewidth=0.5,linestyle="--")
-        plt.plot([0.1]*self.number_layers,color='black',marker='o',markersize=2, linewidth=0.5,linestyle="--")
-        plt.ylabel(r'$\gamma_k$',fontsize=18)
-        plt.xlabel(r'layer $k$',fontsize=18)
-        plt.grid(linestyle='-',linewidth=0.5)
-        plt.legend(["Learnt","Original"]) 
-        plt.show()
-        plt.savefig(os.path.split(path_model)[0]+"/"+ str(os.path.split(os.path.split(path_model)[0])[1])+"learnt_sigma_k.png")
-        plt.close()
-
-        plt.figure()
-
-        plt.plot(list_tau,color='red' ,marker='o',markersize=2, linewidth=0.5,linestyle="--")
-        plt.plot([0.1]*self.number_layers,color='black',marker='o',markersize=2, linewidth=0.5,linestyle="--")
-        plt.ylabel(r'$\tau_k$',fontsize=18)
-        plt.xlabel(r'layer $k$',fontsize=18)
-        plt.grid(linestyle='-',linewidth=0.5)
-        plt.legend(["Learnt","Original"]) 
-        plt.show()
-        plt.savefig(os.path.split(path_model)[0]+"/"+ str(os.path.split(os.path.split(path_model)[0])[1])+"learnt_tau_k.png")
-        plt.close()
-        
-        plt.figure()
-
-        plt.plot(list_tau,color='red' ,marker='o',markersize=2, linewidth=0.5,linestyle="--")
-        plt.plot([0.1]*self.number_layers,color='black', marker='o',markersize=2, linewidth=0.5,linestyle="--")
-        plt.ylabel(r'$\rho_k$',fontsize=18)
-        plt.xlabel(r'layer $k$',fontsize=18)
-        plt.grid(linestyle='-',linewidth=0.5)
-        plt.legend(["Learnt","Original"]) 
-        plt.show()
-        plt.savefig(os.path.split(path_model)[0]+"/"+ str(os.path.split(os.path.split(path_model)[0])[1])+"learnt_rho_k.png")
-        plt.close()
-
-
-        
