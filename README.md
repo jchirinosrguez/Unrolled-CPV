@@ -3,7 +3,6 @@
 
 *  **Author:** Mouna GHARBI
 *  **Institution:** Centre de Vision Numérique, CentraleSupélec, Inria, Université Paris-Saclay
-*  **Related Publications:** MLSP, TSP, EUSIPCO
 *  **Email:** mouna.gharbi@centralesupelec.fr
 
 ### Installation
