@@ -5,8 +5,6 @@
 *  **Institution:** Centre de Vision Numérique, CentraleSupélec, Inria, Université Paris-Saclay
 *  **Email:** mouna.gharbi@centralesupelec.fr
 
-### Installation
-
 ### File Organization
 
 * Datasets:
